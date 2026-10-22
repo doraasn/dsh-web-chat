@@ -1,0 +1,19 @@
+dsh-web-chat
+Copyright (c) 2026 Y77H
+
+This plugin embeds the DeepSeek web chat inside DeepSeek Harness by requesting a
+guest lease from the desktop preload bridge (`globalThis.dshDesktop.browser`) and
+mounting a `<webview>`. That approach, and the shape of the login-snapshot idea
+(localStorage capture/restore around a memory-only browser partition), follow
+dsh-dschat by Jakcet:
+
+  https://github.com/Jakcet/dsh-dschat
+  MIT License, Copyright (c) Jakcet
+
+No source file from that project is included here: the code in this package was
+written for this plugin (keep-alive surface, URL memory, host routes, icon and UI
+are original). The attribution above covers the technique and API usage.
+
+Third-party services: this plugin loads https://chat.deepseek.com/ in a webview.
+It is not affiliated with, endorsed by, or sponsored by DeepSeek. "DeepSeek" is a
+trademark of its owner.

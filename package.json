@@ -1,0 +1,57 @@
+{
+  "name": "dsh-web-chat",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Chat panel for DeepSeek Harness: a sidebar entry that embeds chat.deepseek.com, keeps the page alive across panel switches, remembers the last conversation and restores the login snapshot.",
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "deepseek-harness",
+    "deepseek",
+    "chat",
+    "webview"
+  ],
+  "license": "MIT",
+  "author": "Y77H",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/doraasn/dsh-web-chat.git"
+  },
+  "homepage": "https://github.com/doraasn/dsh-web-chat#readme",
+  "bugs": {
+    "url": "https://github.com/doraasn/dsh-web-chat/issues"
+  },
+  "files": [
+    "index.js",
+    "client.js",
+    "cordis.patch.yml",
+    "icon.svg",
+    "README.md",
+    "README.en.md",
+    "LICENSE",
+    "NOTICE"
+  ],
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./icon": "./icon.svg",
+    "./package.json": "./package.json"
+  },
+  "engines": {
+    "dsh": ">=0.2.1-rc.2"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": [
+        "@deepseek-ai/dsh-client-locale",
+        "@deepseek-ai/dsh-client-ui-renderer",
+        "@deepseek-ai/dsh-client-ui-layout"
+      ]
+    }
+  }
+}

@@ -1,0 +1,4 @@
+- insert:
+    - id: dsh-web-chat
+      name: dsh-web-chat
+      config: {}
