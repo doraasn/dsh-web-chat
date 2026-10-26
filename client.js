@@ -215,6 +215,19 @@ window.__ModuleLoader__.load({
       return `Mozilla/5.0 (${platform}) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${major}.0.0.0 Safari/537.36`
     }
 
+    /**
+     * 网页版判断「使用环境异常」的条件（main.<hash>.js 里 w9）：
+     *   navigator.userAgent 含 "electron"  ||  window.process.type === "renderer"
+     * 换 UA 只能去掉前一半；Electron 客机里 window.process 仍然在，所以这个提示
+     * 还是会弹。它本身是个可关闭的告示（点 X 会把 `closeUnsafeEnvWarn` 写进
+     * localStorage，之后不再显示），这里替用户点一次那个 X：标记写进 localStorage，
+     * 并且这个键会随登录态快照一起存下来，重启后也不会再弹。
+     * 不想要这个行为，把下面的 DISMISS_ENV_WARNING 改成 false。
+     */
+    const DISMISS_ENV_WARNING = true
+    const ENV_WARNING_KEY = 'closeUnsafeEnvWarn'
+    const ENV_WARNING_VALUE = '{"value":true,"__version":"0"}'
+
     function IconButton(props) {
       return h('button', {
         type: 'button',
@@ -315,6 +328,7 @@ window.__ModuleLoader__.load({
               persisting: false,
               destroyed: false,
               placed: false,
+              envSeeded: false,
             }
 
         const offs = []
@@ -350,6 +364,32 @@ window.__ModuleLoader__.load({
         }
         requestAnimationFrame(tick)
 
+        // 「使用环境异常」告示本身就是可关闭的：点 X 会把 closeUnsafeEnvWarn 写进
+        // localStorage，之后不再显示。这里替用户点一次那个 X，标记随登录快照一起
+        // 存盘（见 persistSnapshot 的白名单），重启后也不会再弹。
+        const dismissEnvWarning = async (el) => {
+          if (!DISMISS_ENV_WARNING || view.envSeeded || view.destroyed) return
+          view.envSeeded = true
+          try {
+            const here = readUrl(el)
+            if (!here.startsWith(HOME)) return
+            const key = JSON.stringify(ENV_WARNING_KEY)
+            const current = await el.executeJavaScript(
+              `(() => { try { return localStorage.getItem(${key}) } catch (error) { return null } })()`
+            )
+            if (typeof current === 'string' && current.includes('"value":true')) return
+            const wrote = await el.executeJavaScript(
+              `(() => { try { localStorage.setItem(${key}, ${JSON.stringify(ENV_WARNING_VALUE)}); return true } catch (error) { return false } })()`
+            )
+            if (!wrote) return
+            report('env-warning:dismissed', {})
+            // 让页面重新启动一次读到标记；不等它 resolve，导航会打断这个 promise。
+            void el.executeJavaScript('location.reload()').catch(() => {})
+          } catch (error) {
+            report('env-warning:failed', errorText(error))
+          }
+        }
+
         const persistSnapshot = async (el) => {
           if (disposed || view.persisting || !el) return
           view.persisting = true
@@ -368,7 +408,7 @@ window.__ModuleLoader__.load({
             // 只留登录相关的键：整份 localStorage 可能几百 KB，既没必要也未必写得进去。
             const relevant = {}
             for (const key of Object.keys(parsed)) {
-              if (!/(token|user|auth|session|login)/i.test(key)) continue
+              if (!/(token|user|auth|session|login|closeUnsafeEnvWarn)/i.test(key)) continue
               const value = parsed[key]
               if (typeof value !== 'string' || value.length > 64 * 1024) continue
               relevant[key] = value
@@ -489,14 +529,18 @@ window.__ModuleLoader__.load({
 
             // 这两个监听跨越挂载/卸载：guest 的寿命比一次挂载长。
             el.addEventListener('dom-ready', () => {
-              if (view.destroyed || view.started) return
-              view.started = true
-              void (async () => {
-                const target = await readLastUrl() || HOME
-                if (view.destroyed) return
-                report('dom-ready', { restored: target !== HOME })
-                try { el.loadURL(target) } catch (error) { report('load-failed', errorText(error)) }
-              })()
+              if (view.destroyed) return
+              if (!view.started) {
+                view.started = true
+                void (async () => {
+                  const target = await readLastUrl() || HOME
+                  if (view.destroyed) return
+                  report('dom-ready', { restored: target !== HOME })
+                  try { el.loadURL(target) } catch (error) { report('load-failed', errorText(error)) }
+                })()
+                return
+              }
+              void dismissEnvWarning(el)
             })
             el.addEventListener('destroyed', () => {
               report('guest-destroyed', {})

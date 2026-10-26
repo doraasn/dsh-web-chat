@@ -22,6 +22,12 @@ dsh plugin --profile desktop add dsh-web-chat
   登录相关的键存到 `~/.dsh/dsh-web-chat/storage.json`（0600），下次载入先回填再刷新。
   httpOnly cookie 不在快照范围内，所以偶尔仍需重登。
 - **工具栏**：后退 / 前进 / 刷新 / 回首页 / 当前地址 / 在系统浏览器中打开。
+- **环境 UA**：客机默认 UA 带 `Electron/…`，网页版会据此判「使用环境异常」。插件在 attach
+  之前把 UA 换成同版本号的干净 Chrome UA。
+- **自动关掉那条风险告示**：网页版还会按 `window.process.type === "renderer"` 判一次，这个
+  渲染层改不掉，于是它仍会弹「使用环境异常」。该告示本身可关闭（点 × 会写
+  `closeUnsafeEnvWarn`），插件替你关一次，并把该键纳入登录快照，重启后不再弹。
+  想保留这条告示：把 `client.js` 顶部的 `DISMISS_ENV_WARNING` 改成 `false`。
 
 ## 要求
 
