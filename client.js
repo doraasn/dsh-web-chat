@@ -549,6 +549,14 @@ window.__ModuleLoader__.load({
                   // 不要在这一拍里再对同一个 webview 做别的事：loadURL 返回的 promise 一旦
                   // 被后续调用打断就会静默中止，页面停在 about:blank（1.0.3 的翻车点）。
                   Promise.resolve(el.loadURL(target)).catch((error) => report('load-failed', errorText(error)))
+                  // 兜底：万一这一跳被静默中止（停在 about:blank），5 秒后再试一次。
+                  setTimeout(() => {
+                    if (view.destroyed) return
+                    const here = readUrl(el)
+                    if (/^https?:/i.test(here)) return
+                    report('load-retry', { url: here })
+                    Promise.resolve(el.loadURL(target)).catch((error) => report('load-retry-failed', errorText(error)))
+                  }, 5000)
                 })()
                 return
               }
