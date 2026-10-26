@@ -367,22 +367,31 @@ window.__ModuleLoader__.load({
         // 「使用环境异常」告示本身就是可关闭的：点 X 会把 closeUnsafeEnvWarn 写进
         // localStorage，之后不再显示。这里替用户点一次那个 X，标记随登录快照一起
         // 存盘（见 persistSnapshot 的白名单），重启后也不会再弹。
+        //
+        // 注意不能用 el.getURL() 判断当前文档：dom-ready 触发时它可能还是上一条
+        // about:blank#lease，于是整段逻辑被静默跳过（1.0.2 就是这个毛病）。改成在
+        // 页面里问 location.origin，只有真正停在 chat.deepseek.com 时才动手。
         const dismissEnvWarning = async (el) => {
           if (!DISMISS_ENV_WARNING || view.envSeeded || view.destroyed) return
-          view.envSeeded = true
           try {
-            const here = readUrl(el)
-            if (!here.startsWith(HOME)) return
+            const origin = await el.executeJavaScript(
+              '(() => { try { return location.origin } catch (error) { return "" } })()'
+            )
+            if (origin !== 'https://chat.deepseek.com') return
+            view.envSeeded = true
             const key = JSON.stringify(ENV_WARNING_KEY)
             const current = await el.executeJavaScript(
               `(() => { try { return localStorage.getItem(${key}) } catch (error) { return null } })()`
             )
-            if (typeof current === 'string' && current.includes('"value":true')) return
+            if (typeof current === 'string' && current.includes('"value":true')) {
+              report('env-warning:already', {})
+              return
+            }
             const wrote = await el.executeJavaScript(
-              `(() => { try { localStorage.setItem(${key}, ${JSON.stringify(ENV_WARNING_VALUE)}); return true } catch (error) { return false } })()`
+              `(() => { try { localStorage.setItem(${key}, ${JSON.stringify(ENV_WARNING_VALUE)}); return localStorage.getItem(${key}) } catch (error) { return "ERR:" + error } })()`
             )
-            if (!wrote) return
-            report('env-warning:dismissed', {})
+            report('env-warning:write', { wrote })
+            if (typeof wrote !== 'string' || !wrote.includes('"value":true')) return
             // 让页面重新启动一次读到标记；不等它 resolve，导航会打断这个 promise。
             void el.executeJavaScript('location.reload()').catch(() => {})
           } catch (error) {
@@ -456,6 +465,7 @@ window.__ModuleLoader__.load({
             update({ loading: false })
             syncHistory(el)
             if (view.started) void persistSnapshot(el)
+            void dismissEnvWarning(el)
           })
           listen(el, 'did-navigate', (event) => {
             if (disposed) return
@@ -538,6 +548,7 @@ window.__ModuleLoader__.load({
                   report('dom-ready', { restored: target !== HOME })
                   try { el.loadURL(target) } catch (error) { report('load-failed', errorText(error)) }
                 })()
+                void dismissEnvWarning(el)
                 return
               }
               void dismissEnvWarning(el)
