@@ -199,6 +199,22 @@ window.__ModuleLoader__.load({
       void postJson(`${API}/log`, { event, detail, at: Date.now() })
     }
 
+    /**
+     * 内嵌客机的默认 UA 里带着 `Electron/x.y.z` 和应用名，网页版据此判定
+     * 「使用环境异常」并盖一层风险提示。这里把它换成同版本号的干净 Chrome UA：
+     * 只保留 Chrome 主版本，去掉 Electron 与应用标识，平台段按真实系统拼。
+     */
+    function cleanUserAgent() {
+      const ua = (typeof navigator !== 'undefined' && navigator.userAgent) || ''
+      const major = (/Chrome\/(\d+)/.exec(ua) || [])[1] || '134'
+      const platform = /Macintosh/.test(ua)
+        ? 'Macintosh; Intel Mac OS X 10_15_7'
+        : /Linux/.test(ua)
+          ? 'X11; Linux x86_64'
+          : 'Windows NT 10.0; Win64; x64'
+      return `Mozilla/5.0 (${platform}) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/${major}.0.0.0 Safari/537.36`
+    }
+
     function IconButton(props) {
       return h('button', {
         type: 'button',
@@ -467,6 +483,8 @@ window.__ModuleLoader__.load({
             el.setAttribute('name', reservation.lease)
             el.setAttribute('partition', reservation.partition)
             el.setAttribute('allowpopups', '')
+            // 必须在 attach 之前设置：晚一步页面就带着 Electron UA 出去了。
+            el.setAttribute('useragent', cleanUserAgent())
             el.setAttribute('src', `about:blank#${reservation.lease}`)
 
             // 这两个监听跨越挂载/卸载：guest 的寿命比一次挂载长。

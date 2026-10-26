@@ -1,6 +1,6 @@
 {
   "name": "dsh-web-chat",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "module",
   "description": "Chat panel for DeepSeek Harness: a sidebar entry that embeds chat.deepseek.com, keeps the page alive across panel switches, remembers the last conversation and restores the login snapshot.",
   "keywords": [
