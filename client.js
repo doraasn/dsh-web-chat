@@ -546,12 +546,14 @@ window.__ModuleLoader__.load({
                   const target = await readLastUrl() || HOME
                   if (view.destroyed) return
                   report('dom-ready', { restored: target !== HOME })
-                  try { el.loadURL(target) } catch (error) { report('load-failed', errorText(error)) }
+                  // 不要在这一拍里再对同一个 webview 做别的事：loadURL 返回的 promise 一旦
+                  // 被后续调用打断就会静默中止，页面停在 about:blank（1.0.3 的翻车点）。
+                  Promise.resolve(el.loadURL(target)).catch((error) => report('load-failed', errorText(error)))
                 })()
-                void dismissEnvWarning(el)
                 return
               }
-              void dismissEnvWarning(el)
+              // 等这一轮导航稳定后再动手，避免和 loadURL/首次渲染抢时序。
+              setTimeout(() => { void dismissEnvWarning(el) }, 400)
             })
             el.addEventListener('destroyed', () => {
               report('guest-destroyed', {})
