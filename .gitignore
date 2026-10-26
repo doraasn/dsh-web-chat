@@ -2,3 +2,7 @@ node_modules/
 *.tgz
 *.log
 .DS_Store
+
+# 发布压缩包进仓库，供 CDN 直链安装
+!dist/
+!dist/*.tgz

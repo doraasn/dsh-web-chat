@@ -51,3 +51,16 @@ dsh plugin --profile desktop add dsh-web-chat
 | `icon.svg` | 侧栏图标（描边气泡，与其它入口同风格） |
 
 关闭保活：把 `client.js` 顶部的 `KEEP_ALIVE` 改成 `false`，退回「卸载即释放」的行为。
+
+## 安装（国内网络）
+
+DSH 安装 git 插件是由本机直接去 GitHub 下载，不经过插件市场或镜像源。没有代理的网络会报「无法连接 github.com」。
+
+可改用压缩包直链（CDN，无需代理）：
+
+`
+https://cdn.jsdelivr.net/gh/doraasn/dsh-web-chat@main/dist/dsh-web-chat-1.0.5.tgz
+`
+
+插件市场 →「压缩包」→ 粘贴上面的地址即可安装。
+
