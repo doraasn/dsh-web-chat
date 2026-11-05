@@ -58,9 +58,9 @@ DSH 安装 git 插件是由本机直接去 GitHub 下载，不经过插件市场
 
 可改用压缩包直链（CDN，无需代理）：
 
-`
-https://cdn.jsdelivr.net/gh/doraasn/dsh-web-chat@main/dist/dsh-web-chat-1.0.5.tgz
-`
+```
+https://cdn.jsdelivr.net/gh/doraasn/dsh-web-chat@v1.0.8/dist/dsh-web-chat-1.0.8.tgz
+```
 
 插件市场 →「压缩包」→ 粘贴上面的地址即可安装。
 
