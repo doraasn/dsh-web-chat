@@ -1,6 +1,6 @@
 # dsh-web-chat
 
-A **Chat** panel for DeepSeek Harness (DSH) Desktop: one sidebar entry that embeds
+A **Web Chat** panel for DeepSeek Harness (DSH) Desktop: one sidebar entry that embeds
 [chat.deepseek.com](https://chat.deepseek.com/) as-is, on the web app's own session.
 No proxy, no scraping, no API key.
 

@@ -1,6 +1,6 @@
 # dsh-web-chat
 
-DSH 桌面版里的「聊天」面板：侧栏一个入口，主面板内嵌 [chat.deepseek.com](https://chat.deepseek.com/) 本体，
+DSH 桌面版里的「网页会话」面板：侧栏一个入口，主面板内嵌 [chat.deepseek.com](https://chat.deepseek.com/) 本体，
 用网页端自己的登录态，不做代理、不抓内容。
 
 ## 安装
@@ -9,7 +9,7 @@ DSH 桌面版里的「聊天」面板：侧栏一个入口，主面板内嵌 [ch
 dsh plugin --profile desktop add dsh-web-chat
 ```
 
-重启 DSH，侧栏出现「聊天」。
+重启 DSH，侧栏出现「网页会话」。
 
 ## 行为
 
@@ -59,7 +59,7 @@ DSH 安装 git 插件是由本机直接去 GitHub 下载，不经过插件市场
 可改用压缩包直链（CDN，无需代理）：
 
 ```
-https://cdn.jsdelivr.net/gh/doraasn/dsh-web-chat@v1.0.8/dist/dsh-web-chat-1.0.8.tgz
+https://cdn.jsdelivr.net/gh/doraasn/dsh-web-chat@v1.0.9/dist/dsh-web-chat-1.0.9.tgz
 ```
 
 插件市场 →「压缩包」→ 粘贴上面的地址即可安装。

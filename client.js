@@ -34,8 +34,8 @@ window.__ModuleLoader__.load({
     const KEEP_ALIVE = true
 
     const zh = {
-      'entry.label': '聊天',
-      'panel.starting': '正在打开聊天…',
+      'entry.label': '网页会话',
+      'panel.starting': '正在打开网页会话…',
       'panel.desktopOnly': '这个面板需要 DSH 桌面版；网页版请直接在浏览器里打开 chat.deepseek.com。',
       'panel.acquireFailed': '无法打开内嵌浏览器：{message}',
       'panel.guestDestroyed': '内嵌页面已被关闭，重新打开面板即可恢复。',
@@ -47,8 +47,8 @@ window.__ModuleLoader__.load({
       'action.external': '在系统浏览器中打开',
     }
     const en = {
-      'entry.label': 'Chat',
-      'panel.starting': 'Opening chat…',
+      'entry.label': 'Web Chat',
+      'panel.starting': 'Opening Web Chat…',
       'panel.desktopOnly': 'This panel requires DSH Desktop. Open chat.deepseek.com in a browser instead.',
       'panel.acquireFailed': 'Could not open the embedded browser: {message}',
       'panel.guestDestroyed': 'The embedded page was closed. Reopen the panel to restore it.',
@@ -60,19 +60,32 @@ window.__ModuleLoader__.load({
       'action.external': 'Open in system browser',
     }
 
+    // 色板与字号取自 dsh-plugin-dev 技能的内联 kit（assets/kit/client-ui.js）。
+    // 只内联常量、不引组件：本插件没有设置页，也不改写渲染逻辑。
+    const T = {
+      text1: 'var(--dsw-alias-label-primary)',
+      text2: 'var(--dsw-alias-label-secondary)',
+      text3: 'var(--dsw-alias-label-tertiary, #8b929c)',
+      line: 'var(--dsw-alias-border-l3)',
+    }
+    const TYPE = {
+      body: { fontSize: 13, lineHeight: '20px' },
+      micro: { fontSize: 11, lineHeight: '14px' },
+    }
+
     const STYLE_ID = `${PANEL_ID}/css`
     const CSS = [
       '.dwc-root{display:flex;flex-direction:column;height:100%;min-height:0;flex:1 1 auto;background:var(--dsw-alias-bg-base);color:var(--dsw-alias-label-primary)}',
-      '.dwc-toolbar{display:flex;flex:none;align-items:center;gap:4px;height:38px;padding:5px 6px;box-sizing:border-box;border-bottom:.5px solid var(--dsw-alias-border-l3)}',
-      '.dwc-tool{display:inline-flex;flex:none;align-items:center;justify-content:center;width:28px;height:28px;padding:0;border:0;border-radius:var(--dsw-radius-sm);background:0 0;color:var(--dsw-alias-label-secondary);cursor:pointer}',
-      '.dwc-tool:hover:not(:disabled){color:var(--dsw-alias-label-primary);background:var(--dsw-alias-interactive-bg-hover)}',
+      `.dwc-toolbar{display:flex;flex:none;align-items:center;gap:4px;height:38px;padding:5px 6px;box-sizing:border-box;border-bottom:.5px solid ${T.line}}`,
+      `.dwc-tool{display:inline-flex;flex:none;align-items:center;justify-content:center;width:28px;height:28px;padding:0;border:0;border-radius:var(--dsw-radius-sm);background:0 0;color:${T.text2};cursor:pointer}`,
+      `.dwc-tool:hover:not(:disabled){color:${T.text1};background:var(--dsw-alias-interactive-bg-hover)}`,
       '.dwc-tool:disabled{color:var(--dsw-alias-label-quaternary);cursor:default}',
-      '.dwc-location{flex:auto;min-width:0;overflow:hidden;padding:0 8px;font:var(--dsw-font-xxs-12);color:var(--dsw-alias-label-tertiary);text-overflow:ellipsis;white-space:nowrap}',
+      `.dwc-location{flex:auto;min-width:0;overflow:hidden;padding:0 8px;font-size:${TYPE.micro.fontSize}px;line-height:${TYPE.micro.lineHeight};color:${T.text3};text-overflow:ellipsis;white-space:nowrap}`,
       '.dwc-spinner{flex:none;width:12px;height:12px;margin:0 6px;border-radius:50%;border:1.5px solid var(--dsw-alias-border-l2);border-top-color:var(--dsw-alias-label-secondary);animation:dwc-spin .8s linear infinite}',
       '@keyframes dwc-spin{to{transform:rotate(360deg)}}',
       '.dwc-viewport{position:relative;flex:auto;min-height:0;background:var(--dsw-alias-bg-base)}',
       '.dwc-host{position:absolute;inset:0}',
-      '.dwc-notice{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:24px;box-sizing:border-box;text-align:center;font-size:13px;line-height:1.6;color:var(--dsw-alias-label-secondary);background:var(--dsw-alias-bg-base)}',
+      `.dwc-notice{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:24px;box-sizing:border-box;text-align:center;font-size:${TYPE.body.fontSize}px;line-height:${TYPE.body.lineHeight};color:${T.text2};background:var(--dsw-alias-bg-base)}`,
       '.dwc-notice[data-kind="error"]{color:var(--dsw-alias-state-error-primary)}',
     ].join('')
 
