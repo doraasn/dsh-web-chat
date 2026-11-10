@@ -26,7 +26,9 @@ export const name = 'dsh-web-chat'
 export const inject = ['webServer']
 
 const CHAT_ORIGIN = 'https://chat.deepseek.com/'
-const DATA_DIR = join(homedir(), '.dsh', 'dsh-web-chat')
+// 跟随 DSH_HOME：测试与多档案环境不该把快照写进真实的 ~/.dsh。
+const DSH_HOME = process.env.DSH_HOME || join(homedir(), '.dsh')
+const DATA_DIR = join(DSH_HOME, 'dsh-web-chat')
 const LOG_FILE = join(DATA_DIR, 'client.log')
 const SESSION_FILE = join(DATA_DIR, 'storage.json')
 const LAST_URL_FILE = join(DATA_DIR, 'last-url.json')
@@ -77,12 +79,59 @@ function acceptableUrl(url) {
   return url === '' || (typeof url === 'string' && url.startsWith(CHAT_ORIGIN) && url.length <= 2048)
 }
 
+/**
+ * 这些接口拿得到登录快照（内含 userToken），而宿主 Web 服务不做会话校验。
+ *
+ * 只信任「本机 + 同源」：
+ *   - Host 必须是回环（挡 DNS rebinding：攻击面解析到 127.0.0.1 后 Host 仍是攻击者域名）；
+ *   - Origin 若存在，必须等于宿主自身来源（挡任意网页的跨站请求）。
+ * 隧道代理会把 Host/Origin 重写成上游地址，手机端不受影响。
+ */
+function isLoopbackHost(hostHeader) {
+  if (!hostHeader) return false
+  const host = String(hostHeader).trim().toLowerCase()
+  const name = host.startsWith('[') ? host.slice(0, host.indexOf(']') + 1) : host.replace(/:\d+$/, '')
+  return name === '127.0.0.1' || name === 'localhost' || name === '[::1]' || name === '::1'
+}
+
+function isSameOrigin(originHeader, selfOrigin) {
+  const origin = String(originHeader || '').trim()
+  if (!origin) return true // 非浏览器客户端（curl / 测试）不带 Origin
+  if (origin === 'null') return false // file:// 或 sandbox iframe
+  let parsed
+  try {
+    parsed = new URL(origin)
+  } catch {
+    return false
+  }
+  // 只放行回环来源：localhost 与 127.0.0.1 视为同一个服务（端口必须一致）。
+  // evil.example 即使解析到 127.0.0.1，Origin 仍是它自己的域名，过不了这一关。
+  if (!/^https?:$/.test(parsed.protocol) || !isLoopbackHost(parsed.host)) return false
+  if (!selfOrigin) return true
+  try {
+    return new URL(selfOrigin).port === parsed.port
+  } catch {
+    return false
+  }
+}
+
 export function apply(ctx) {
   ctx.effect(() => ctx.webServer.register({
     kind: 'prefix',
     path: '/api/dsh-web-chat',
     handler: async (req, res) => {
       const url = new URL(req.url ?? '/', 'http://localhost')
+      const selfOrigin = (() => {
+        try { return new URL(ctx.webServer.getOrigin?.() ?? '').origin } catch { return '' }
+      })()
+      if (!isLoopbackHost(req.headers?.host)) {
+        sendJson(res, 403, { ok: false, error: 'forbidden-host' })
+        return
+      }
+      if (!isSameOrigin(req.headers?.origin, selfOrigin)) {
+        sendJson(res, 403, { ok: false, error: 'forbidden-origin' })
+        return
+      }
       try {
         if (req.method === 'GET' && url.pathname === '/api/dsh-web-chat/ping') {
           sendJson(res, 200, { ok: true, plugin: name, origin: ctx.webServer.getOrigin() })
